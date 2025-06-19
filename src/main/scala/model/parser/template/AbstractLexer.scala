@@ -15,7 +15,7 @@ import scala.collection.immutable.Queue
 
 abstract class AbstractLexer[T <: Token](
   inputStream: InputStream,
-  lexerParams: LexerParams
+  lexerParams: LexerParams,
 ) {
   def apply[L <: AbstractLexer[_ <: Token]](inputStream: InputStream): L = this(inputStream)
 
@@ -45,7 +45,7 @@ abstract class AbstractLexer[T <: Token](
   private def processCurToken(
     curParams: LexerParams,
     skip: Boolean,
-    curTokenized: Tokenized = TokenizedEmpty
+    curTokenized: Tokenized = TokenizedEmpty,
   ): ParseEither[LexerParams] = {
     if (!skip) {
       Right(LexerParams(curTokenized, curParams.curPos, curParams.realPos, curParams.lastRead, curParams.buffer))
@@ -64,7 +64,7 @@ abstract class AbstractLexer[T <: Token](
     candidates: List[LexerRule[T]],
     params: LexerParams,
     nPos: Int,
-    curTokenized: Tokenized
+    curTokenized: Tokenized,
   ): ParseEither[(LexerParams, Int, Tokenized)] = {
     if (!params.signalizeEnd && candidates.nonEmpty) {
       val nCandidates = List.empty[LexerRule[T]]
@@ -86,9 +86,9 @@ abstract class AbstractLexer[T <: Token](
 
   private def processCandidate(candidate: LexerRule[T], params: LexerParams, nPos: Int)(
     curCandidates: List[LexerRule[T]],
-    curTokenized: Tokenized
+    curTokenized: Tokenized,
   ): (List[LexerRule[T]], LexerParams, Int, Tokenized) = {
-    val curStr = getBufferedString(params.buffer)
+    val curStr  = getBufferedString(params.buffer)
     val matcher = Pattern.compile(candidate.token.getPatternAsString).matcher(curStr)
     matcher.matches()
     val newCandidates = curCandidates ++ ((matcher.hitEnd() && params.lastRead != -1) ?? (Set(candidate), Set.empty))
@@ -120,8 +120,8 @@ abstract class AbstractLexer[T <: Token](
           params.curPos + 1,
           params.realPos,
           params.lastRead,
-          (params.buffer.size > 1) ?? (params.buffer.tail, Queue.empty)
-        )
+          (params.buffer.size > 1) ?? (params.buffer.tail, Queue.empty),
+        ),
       )
     }
   }
@@ -142,7 +142,7 @@ object AbstractLexer {
     curPos: Int,
     realPos: Int,
     lastRead: Int,
-    buffer: Queue[Char] = Queue.empty
+    buffer: Queue[Char] = Queue.empty,
   ) {
     def signalizeEnd: Boolean = curPos == realPos && lastRead == -1
   }

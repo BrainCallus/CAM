@@ -1,5 +1,6 @@
 import Versions.V
-import sbt.librarymanagement.ModuleID
+import sbt.Cross
+import sbt.librarymanagement.{CrossVersion, ModuleID}
 import sbt.librarymanagement.syntax.*
 
 object Dependencies {

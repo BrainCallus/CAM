@@ -5,22 +5,18 @@ import cats.syntax.applicativeError.*
 import model.Instruction.*
 import model.Value.{ClosureValue, IntValue, NullValue}
 import model.parser.ml.{MlLexer, MlParser}
-import model.{Instruction, Value}
+import model.{CAMExecutor, Instruction, RowFormater}
 import tofu.syntax.feither.EitherFOps
 
 import java.io.ByteArrayInputStream
 
 @main
 def main(): Unit = {
-  val instructions = List(
-    QUOTE(IntValue(1)),
-    SWAP,
-    QUOTE(IntValue(1)),
-    ADD,
-    STOP,
-  )
-  val input                               = "let rec fact = fun n -> if n == 0 then 1 else n*(fact (n-1)) in (fact 5)"
-  val is                                  = new ByteArrayInputStream(input.getBytes())
+  // TODO: UnaryOp.negation to parser grammar
+  val input = "let rec fact = fun n -> if n == 0 then 1 else n*(fact (n - 1)) in (fact 5)"
+  val is    = new ByteArrayInputStream(input.getBytes())
+
+  val executor = CAMExecutor.make[IO]
 
   val mlParser = MlParser[IO](is)
   val expr = mlParser
@@ -32,17 +28,29 @@ def main(): Unit = {
     .unsafeRunSync()
   println(expr)
 
-  val instr = expr.toInstructions[IO](List.empty).map(_.appended(Instruction.STOP)).unsafeRunSync()
-   println("\n\n")
-   println(instr)
+  val executorRes = executor.executeExpression(expr).unsafeRunSync()
+  println(executorRes)
+
+  val instr =
+    InstructionsRaw.factorial._1 :: InstructionsRaw.factorial._2 // expr.toInstructions[IO](List.empty).map(_.appended(Instruction.STOP)).unsafeRunSync()
+  println("\n\n")
+  println(expr.toInstructions[IO](List.empty).map(_.appended(Instruction.STOP)).unsafeRunSync())
+  println(instr)
   println(instr.head.execute(List.empty)(instr.tail, List(NullValue)))
+
+  val row = List(
+    ("Instruction", 3),
+    ("Description", 15),
+    ("Example", 1),
+  )
+  println(RowFormater.formatRow(row, sep = Some(" | ")))
 }
 
 object InstructionsRaw {
   val onePlusOne: (Instruction, List[Instruction]) = (
-    DUPLICATE,
+    PUSH,
     List(
-      DUPLICATE,
+      PUSH,
       QUOTE(IntValue(1)),
       CONS,
       CAR,
@@ -55,12 +63,12 @@ object InstructionsRaw {
 
   // let x = 3 in if 1==1 then if 2==3 then 4 else fun y -> y + x 10 else 6
   val letIfFun: (Instruction, List[Instruction]) = (
-    DUPLICATE,
+    PUSH,
     List(
       QUOTE(IntValue(3)),
       CONS,
-      DUPLICATE,
-      DUPLICATE,
+      PUSH,
+      PUSH,
       QUOTE(IntValue(1)),
       SWAP,
       QUOTE(IntValue(1)),
@@ -68,8 +76,8 @@ object InstructionsRaw {
       BRANCH(
         ClosureValue(
           List(
-            DUPLICATE,
-            DUPLICATE,
+            PUSH,
+            PUSH,
             QUOTE(IntValue(3)),
             SWAP,
             QUOTE(IntValue(2)),
@@ -78,11 +86,12 @@ object InstructionsRaw {
               ClosureValue(List(QUOTE(IntValue(4)), RET)),
               ClosureValue(
                 List(
-                  PUSH(
+                  PUSH,
+                  QUOTE(
                     ClosureValue(
                       List(
-                        DUPLICATE,
-                        DUPLICATE,
+                        PUSH,
+                        PUSH,
                         QUOTE(IntValue(10)),
                         SWAP,
                         CDR,
@@ -117,16 +126,18 @@ object InstructionsRaw {
   )
 
   val xSquareSquare: (Instruction, List[Instruction]) = (
-    DUPLICATE,
+    PUSH,
     List(
-      PUSH(
+      PUSH,
+      QUOTE(
         ClosureValue(
           List(
-            PUSH(
+            PUSH,
+            QUOTE(
               ClosureValue(
                 List(
-                  DUPLICATE,
-                  DUPLICATE,
+                  PUSH,
+                  PUSH,
                   CAR,
                   SWAP,
                   CDR,
@@ -157,11 +168,12 @@ object InstructionsRaw {
       SWAP,
       CONS,
       CONS,
-      DUPLICATE,
-      PUSH(
+      PUSH,
+      PUSH,
+      QUOTE(
         ClosureValue(
           List(
-            DUPLICATE,
+            PUSH,
             CAR,
             SWAP,
             CAR,
@@ -173,10 +185,10 @@ object InstructionsRaw {
       SWAP,
       CONS,
       CONS,
-      DUPLICATE,
+      PUSH,
       QUOTE(IntValue(5)),
       SWAP,
-      DUPLICATE,
+      PUSH,
       CAR,
       SWAP,
       CDR,
@@ -196,13 +208,15 @@ object InstructionsRaw {
   )
 
   val factorial: (Instruction, List[Instruction]) = (
-    PUSH(NullValue),
+    PUSH,
     List(
-      PUSH(
+      QUOTE(NullValue),
+      PUSH,
+      QUOTE(
         ClosureValue(
           List(
-            DUPLICATE,
-            DUPLICATE,
+            PUSH,
+            PUSH,
             QUOTE(IntValue(0)),
             SWAP,
             CAR,
@@ -211,9 +225,9 @@ object InstructionsRaw {
               ClosureValue(List(QUOTE(IntValue(1)), RET)),
               ClosureValue(
                 List(
-                  DUPLICATE,
-                  DUPLICATE,
-                  DUPLICATE,
+                  PUSH,
+                  PUSH,
+                  PUSH,
                   QUOTE(IntValue(1)),
                   SWAP,
                   CAR,
@@ -240,12 +254,12 @@ object InstructionsRaw {
       ),
       SWAP,
       CONS,
-      DUPLICATE,
+      PUSH,
       SHL3,
       CONS,
       SETFST,
       CAR,
-      DUPLICATE,
+      PUSH,
       QUOTE(IntValue(5)),
       SWAP,
       CAR,
@@ -258,11 +272,10 @@ object InstructionsRaw {
     ),
   )
 
-
   val nestedconditional: (Instruction, List[Instruction]) = (
-    DUPLICATE,
+    PUSH,
     List(
-      DUPLICATE,
+      PUSH,
       QUOTE(IntValue(1)),
       SWAP,
       QUOTE(IntValue(1)),
@@ -270,8 +283,8 @@ object InstructionsRaw {
       BRANCH(
         ClosureValue(
           List(
-            DUPLICATE,
-            DUPLICATE,
+            PUSH,
+            PUSH,
             QUOTE(IntValue(3)),
             SWAP,
             QUOTE(IntValue(2)),

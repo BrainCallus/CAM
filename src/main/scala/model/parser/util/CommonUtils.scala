@@ -1,6 +1,6 @@
 package model.parser.util
 
-import GrammarTree._
+import GrammarTree.*
 
 import scala.annotation.tailrec
 import scala.jdk.javaapi.CollectionConverters.asScala
@@ -26,7 +26,7 @@ object CommonUtils {
 
   @tailrec
   private def doFoldl[T, E](accum: E)(
-    func: (E, T) => E
+    func: (E, T) => E,
   )(list: List[T]): E =
     list match {
       case Nil          => accum

@@ -12,7 +12,7 @@ case class TranslatingSymbol(code: String) extends GrammarEntry {
   @tailrec
   private def internalNormalize(stringBuilder: StringBuilder, n: Int, in: Boolean)(
     code: String,
-    lexerVar: String
+    lexerVar: String,
   ): String =
     n match {
       case 0 => stringBuilder.toString()

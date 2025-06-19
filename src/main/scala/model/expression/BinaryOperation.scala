@@ -1,7 +1,7 @@
 package model.expression
 
 import cats.effect.MonadCancelThrow
-import cats.syntax.applicative.*
+import cats.syntax.applicative._
 import enumeratum.{Enum, EnumEntry}
 import model.{Instruction, ToInstructions}
 

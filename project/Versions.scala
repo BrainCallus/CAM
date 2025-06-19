@@ -7,6 +7,7 @@ object Versions {
     val tofu        = "0.13.7"
     val enumeratum  = "1.9.0"
     val tethys      = "0.29.5"
+    val escritoire  = "0.31.0"
 
     val scalaTest       = "3.0.9"
     val munitCatsEffect = "2.0.0"

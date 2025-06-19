@@ -37,7 +37,7 @@ object WriteUtil {
 
   private def internalWriteTreeDot(
     stringBuilder: StringBuilder,
-    tree: Tree[_]
+    tree: Tree[_],
   )(idx: Int, pIdx: Int): (Int, StringBuilder) = {
 
     val nextBuilder: StringBuilder = stringBuilder
@@ -59,8 +59,8 @@ object WriteUtil {
     State(offset =>
       (
         modify(offset),
-        writeLine(writer, line, offset)
-      )
+        writeLine(writer, line, offset),
+      ),
     )
 
   def writeLine(writer: BufferedWriter, line: String, offsetLen: Int): Unit = {

@@ -9,7 +9,7 @@ object GrammarTree {
   class ContextTree(root: String, children: List[GrammarTree[_]]) extends GrammarTree[String](root, children) {
     override implicit def showEv: Show[String] = showString
 
-    def pushFirstChild(child: GrammarTree[_]) = new ContextTree(root, child :: children)
+    def pushFirstChild(child: GrammarTree[_])  = new ContextTree(root, child :: children)
     def appendLastChild(child: GrammarTree[_]) = new ContextTree(root, children ++ List(child))
   }
 
@@ -17,6 +17,6 @@ object GrammarTree {
     override implicit def showEv: Show[Tokenized] = showTokenized
   }
 
-  implicit val showString: Show[String] = (str: String) => str
+  implicit val showString: Show[String]       = (str: String) => str
   implicit val showTokenized: Show[Tokenized] = (tokenized: Tokenized) => tokenized.text
 }
