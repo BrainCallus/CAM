@@ -3,27 +3,18 @@ package model
 import cats.Show
 import cats.syntax.show.*
 import model.Value.*
+import model.io.ContextWriter.{showCode, showIterableStrings}
 
 case class CAMContext(
   term: Value,
   code: List[Instruction],
   stack: List[Value],
   env: List[Value],
-) {}
+)
 
 object CAMContext {
-  private type TripleString = (String, String, String)
   implicit val camContextShow: Show[CAMContext] = Show.show { case CAMContext(term, code, stack, env) =>
-    val termShow  = showValue(term, env)
-    val stackShow = stack.map(showValue(_, env)).mkString("[", ",", "]")
-    RowFormater.formatRow(
-      List(
-        (termShow, 50),
-        (code.show, 50),
-        (stackShow, 100),
-      ),
-      sep = Some(" | "),
-    )
+    s"(${showValue(term, env)} | ${showCode.show(code)} | ${showIterableStrings.show(stack.map(showValue(_, env)))})"
   }
 
   private def showValue(value: Value, env: List[Value]): String = {

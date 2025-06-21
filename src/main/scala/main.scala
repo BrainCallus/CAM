@@ -4,19 +4,33 @@ import cats.syntax.applicative.*
 import cats.syntax.applicativeError.*
 import model.Instruction.*
 import model.Value.{ClosureValue, IntValue, NullValue}
+import model.io.ContextWriter.ContextWriterConfig
+import model.io.*
 import model.parser.ml.{MlLexer, MlParser}
-import model.{CAMExecutor, Instruction, RowFormater}
+import model.{CAMExecutor, Instruction}
 import tofu.syntax.feither.EitherFOps
 
 import java.io.ByteArrayInputStream
+import java.nio.file.Paths
+
+val camContextConfig: ContextWriterConfig = ContextWriterConfig(
+  file = Paths.get("out/result.md"),
+  termCol = 50,
+  codeCol = 50,
+  stackCol = 100,
+)
+
+implicit val rowFormater: RowFormater[IO]     = RowFormater.make[IO]
+implicit val fileWriter: FileWriter[IO]       = FileWriter.make[IO]
+implicit val contextWriter: ContextWriter[IO] = model.io.ContextWriter.make[IO](camContextConfig)
+
+val executor: CAMExecutor[IO] = CAMExecutor.make[IO]
 
 @main
 def main(): Unit = {
   // TODO: UnaryOp.negation to parser grammar
   val input = "let rec fact = fun n -> if n == 0 then 1 else n*(fact (n - 1)) in (fact 5)"
   val is    = new ByteArrayInputStream(input.getBytes())
-
-  val executor = CAMExecutor.make[IO]
 
   val mlParser = MlParser[IO](is)
   val expr = mlParser
@@ -38,12 +52,6 @@ def main(): Unit = {
   println(instr)
   println(instr.head.execute(List.empty)(instr.tail, List(NullValue)))
 
-  val row = List(
-    ("Instruction", 3),
-    ("Description", 15),
-    ("Example", 1),
-  )
-  println(RowFormater.formatRow(row, sep = Some(" | ")))
 }
 
 object InstructionsRaw {

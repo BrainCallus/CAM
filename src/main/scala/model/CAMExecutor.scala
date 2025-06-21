@@ -1,16 +1,15 @@
 package model
 
 import cats.effect.MonadCancelThrow
-import cats.effect.std.Console
 import cats.syntax.applicative.*
 import cats.syntax.applicativeError.*
 import cats.syntax.either.*
 import cats.syntax.flatMap.*
 import cats.syntax.functor.*
-import cats.syntax.show.*
 import model.Instruction.STOP
 import model.Value.NullValue
 import model.expression.Expression
+import model.io.ContextWriter
 import tofu.syntax.feither.*
 
 trait CAMExecutor[F[_]] {
@@ -21,15 +20,14 @@ trait CAMExecutor[F[_]] {
 object CAMExecutor {
   def apply[F[_]](implicit executor: CAMExecutor[F]): CAMExecutor[F] = executor
 
-  def make[F[_]: MonadCancelThrow: Console]: CAMExecutor[F] = new CAMExecutor[F] {
+  def make[F[_]: MonadCancelThrow: ContextWriter]: CAMExecutor[F] = new CAMExecutor[F] {
     override def executeInstructions(instructions: List[Instruction]): F[Value] = {
       val startCtx = CAMContext(term = NullValue, code = instructions, stack = List.empty, env = List.empty)
 
       MonadCancelThrow[F]
         .tailRecM[CAMContext, Either[Throwable, Value]](startCtx) { ctx =>
           for {
-            _ <- Console[F].println(ctx.show)
-            _ <- Console[F].println("-".repeat(200) + "\n")
+            _ <- ContextWriter[F].consolePrint(ctx)
             r <- ctx.code match {
               case STOP :: Nil => ctx.term.asRight.asRightF
               case i :: is =>
