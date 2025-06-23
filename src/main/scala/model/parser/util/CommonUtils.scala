@@ -11,13 +11,13 @@ object CommonUtils {
   }
 
   // for tests mainly
-  def treeToStringList(tree: GrammarTree[_]): List[String] = internalTreeToStringList(List.empty[String])(tree)
+  def treeToStringList(tree: GrammarTree[?]): List[String] = internalTreeToStringList(List.empty[String])(tree)
 
-  private def internalTreeToStringList(acc: List[String])(tree: GrammarTree[_]): List[String] =
+  private def internalTreeToStringList(acc: List[String])(tree: GrammarTree[?]): List[String] =
     tree match {
       case TerminalTree(tokenized) => acc ++ List(tokenized.text)
       case _ =>
-        foldl(acc)((accum: List[String], tree: GrammarTree[_]) => {
+        foldl(acc)((accum: List[String], tree: GrammarTree[?]) => {
           accum ++ treeToStringList(tree)
         })(tree.children)
     }

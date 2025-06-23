@@ -14,7 +14,6 @@ final case class SetupConfig(
   def outputFileName: String = {
     val extIdx         = inputFileName.lastIndexOf('.')
     val nameWithoutExt = inputFileName.substring(0, if (extIdx > 0) extIdx else inputFileName.length)
-    println(nameWithoutExt)
     s"${nameWithoutExt}_result.md"
   }
 

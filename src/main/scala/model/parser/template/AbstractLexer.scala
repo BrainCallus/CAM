@@ -17,7 +17,7 @@ abstract class AbstractLexer[T <: Token](
   inputStream: InputStream,
   lexerParams: LexerParams,
 ) {
-  def apply[L <: AbstractLexer[_ <: Token]](inputStream: InputStream): L = this(inputStream)
+  def apply[L <: AbstractLexer[? <: Token]](inputStream: InputStream): L = this(inputStream)
 
   val lexerRules: List[LexerRule[T]]
   def getTokenWithName(name: String): T

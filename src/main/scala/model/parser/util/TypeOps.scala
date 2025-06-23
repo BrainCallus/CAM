@@ -11,7 +11,7 @@ object TypeOps {
   type MET[E[_], A]           = EitherT[E, ParseException, A]
   type ParseState[F[_], S, A] = StateT[MkContainer[MET, F]#Cont, S, A]
 
-  def throwPEStateT[F[_]: Monad, L <: AbstractLexer[_], T](
+  def throwPEStateT[F[_]: Monad, L <: AbstractLexer[?], T](
     message: String,
   ): ParseState[F, L, T] =
     StateT.apply[MkContainer[MET, F]#Cont, L, T] { l => EitherT.leftT(new ParseException(message, l.curPos())) }

@@ -20,7 +20,7 @@ object WriteUtil {
   def deleteFile(file: Path): Try[Unit] =
     Try(Files.delete(file))
 
-  def makeGraph(parsed: Tree[_], file: String = "graph.dot"): Unit = {
+  def makeGraph(parsed: Tree[?], file: String = "graph.dot"): Unit = {
     try {
       val fileWriter = new FileWriter(new File(file))
       fileWriter.write(toDotFileString(parsed))
@@ -32,25 +32,25 @@ object WriteUtil {
     }
   }
 
-  private def toDotFileString(tree: Tree[_]): String =
+  private def toDotFileString(tree: Tree[?]): String =
     internalWriteTreeDot(new StringBuilder("digraph G {\n"), tree)(0, -1)._2.append("}\n").toString()
 
   private def internalWriteTreeDot(
     stringBuilder: StringBuilder,
-    tree: Tree[_],
+    tree: Tree[?],
   )(idx: Int, pIdx: Int): (Int, StringBuilder) = {
 
     val nextBuilder: StringBuilder = stringBuilder
       .append(s"$idx [label = \"${getDotLabelFromTree(tree)}\"]\n")
       .append(if (pIdx == -1) "" else s"$pIdx -> $idx\n")
-    tree.children.foldLeft((idx, nextBuilder))((acc: (Int, StringBuilder), child: Tree[_]) => {
+    tree.children.foldLeft((idx, nextBuilder))((acc: (Int, StringBuilder), child: Tree[?]) => {
       internalWriteTreeDot(acc._2, child)(acc._1 + 1, idx)
     })
   }
 
-  private def getDotLabelFromTree(tree: Tree[_]): String = {
+  private def getDotLabelFromTree(tree: Tree[?]): String = {
     tree match {
-      case TerminalTree(tokenized) => s"[${tokenized.asInstanceOf[TokenizedValue[_]].token}, ${tokenized.text}]"
+      case TerminalTree(tokenized) => s"[${tokenized.asInstanceOf[TokenizedValue[?]].token}, ${tokenized.text}]"
       case _                       => tree.showRoot
     }
   }
