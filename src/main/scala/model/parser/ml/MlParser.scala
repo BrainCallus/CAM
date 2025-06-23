@@ -39,17 +39,17 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
           )
         ) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             b        <- binOp()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => b :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => b :: list)
             e        <- expr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => e :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => e :: list)
 
             // USER CODE
             res = BinaryOpTerm(b.res, fromTerm, e.res)
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield OtherContContext("otherCont", children.reverse, res)
         } else if (
           lex.curTokenIn(
@@ -68,15 +68,15 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
           )
         ) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             a        <- expr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => a :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => a :: list)
 
             // USER CODE
             res = AppTerm(fromTerm, a.res)
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield OtherContContext("otherCont", children.reverse, res)
         } else {
           throwPEStateT[F, MlLexer, OtherContContext]("Unexpected token: " + lex.curToken())
@@ -90,45 +90,45 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
       res <-
         if (lex.curTokenIn(Set(MlToken.OPEN_PAIR))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             o        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.OPEN_PAIR)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected OPEN_PAIR, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected OPEN_PAIR, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
             e1       <- expr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => e1 :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => e1 :: list)
             c        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.COMMA)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected COMMA, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected COMMA, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
             e2       <- expr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => e2 :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => e2 :: list)
             c2       <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.CLOSE_PAIR)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected CLOSE_PAIR, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected CLOSE_PAIR, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
 
@@ -136,7 +136,7 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
             res = PairTerm(e1.res, e2.res)
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield PairExprContext("pairExpr", children.reverse, res)
         } else {
           throwPEStateT[F, MlLexer, PairExprContext]("Unexpected token: " + lex.curToken())
@@ -150,27 +150,27 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
       res <-
         if (lex.curTokenIn(Set(MlToken.LET))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             l        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.LET)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected LET, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected LET, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
             r        <- qRec()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => r :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => r :: list)
 
             // USER CODE
             res = l.text + r.res
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield LetQrecContext("letQrec", children.reverse, res)
         } else {
           throwPEStateT[F, MlLexer, LetQrecContext]("Unexpected token: " + lex.curToken())
@@ -184,55 +184,55 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
       res <-
         if (lex.curTokenIn(Set(MlToken.IF))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             i        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.IF)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected IF, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected IF, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
             cond     <- expr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => cond :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => cond :: list)
             t        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.THEN)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected THEN, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected THEN, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
             thenExpr <- expr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => thenExpr :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => thenExpr :: list)
             e        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.ELSE)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected ELSE, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected ELSE, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
             elseExpr <- expr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => elseExpr :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => elseExpr :: list)
 
             // USER CODE
             res = CondTerm(cond.res, thenExpr.res, elseExpr.res)
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield IfExprContext("ifExpr", children.reverse, res)
         } else {
           throwPEStateT[F, MlLexer, IfExprContext]("Unexpected token: " + lex.curToken())
@@ -246,17 +246,17 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
       res <-
         if (lex.curTokenIn(Set(MlToken.REC))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             r        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.REC)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected REC, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected REC, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
 
@@ -264,17 +264,17 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
             res = r.text
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield QRecContext("qRec", children.reverse, res)
         } else if (lex.curTokenIn(Set(MlToken.VAR))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
 
             // USER CODE
             res = ""
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield QRecContext("qRec", children.reverse, res)
         } else {
           throwPEStateT[F, MlLexer, QRecContext]("Unexpected token: " + lex.curToken())
@@ -288,51 +288,51 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
       res <-
         if (lex.curTokenIn(Set(MlToken.FUN))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             f        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.FUN)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected FUN, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected FUN, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
             v        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.VAR)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected VAR, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected VAR, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
             a        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.ARROW)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected ARROW, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected ARROW, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
             e        <- expr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => e :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => e :: list)
 
             // USER CODE
             res = FuncTerm(v.text, e.res)
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield FuncExprContext("funcExpr", children.reverse, res)
         } else {
           throwPEStateT[F, MlLexer, FuncExprContext]("Unexpected token: " + lex.curToken())
@@ -346,17 +346,17 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
       res <-
         if (lex.curTokenIn(Set(MlToken.BOOL, MlToken.NUMBER, MlToken.VAR, MlToken.LPAREN))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             t        <- term()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => t :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => t :: list)
             cont     <- otherQcont(t.res)
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => cont :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => cont :: list)
 
             // USER CODE
             res = cont.res
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield OtherExprContext("otherExpr", children.reverse, res)
         } else {
           throwPEStateT[F, MlLexer, OtherExprContext]("Unexpected token: " + lex.curToken())
@@ -370,49 +370,49 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
       res <-
         if (lex.curTokenIn(Set(MlToken.LET))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             l        <- letQrec()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => l :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => l :: list)
             v        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.VAR)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected VAR, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected VAR, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
             assn     <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.EQ)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected EQ, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected EQ, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState  <- getLexerWithNextToken(curState)
             valueExpr <- expr()
-            curState  <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => valueExpr :: list)
+            curState  <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => valueExpr :: list)
             i         <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer     <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.IN)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected IN, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected IN, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
             inExpr   <- expr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => inExpr :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => inExpr :: list)
 
             // USER CODE
             res =
@@ -420,7 +420,7 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
               else LetTerm(v.text, valueExpr.res, inExpr.res)
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield LetQrecExprContext("letQrecExpr", children.reverse, res)
         } else {
           throwPEStateT[F, MlLexer, LetQrecExprContext]("Unexpected token: " + lex.curToken())
@@ -434,17 +434,17 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
       res <-
         if (lex.curTokenIn(Set(MlToken.MUL))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             m        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.MUL)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected MUL, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected MUL, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
 
@@ -452,21 +452,21 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
             res = BinaryOperation.Mul
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield BinOpContext("binOp", children.reverse, res)
         } else if (lex.curTokenIn(Set(MlToken.GT))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             g        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.GT)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected GT, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected GT, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
 
@@ -474,21 +474,21 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
             res = BinaryOperation.Gt
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield BinOpContext("binOp", children.reverse, res)
         } else if (lex.curTokenIn(Set(MlToken.LT))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             l        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.LT)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected LT, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected LT, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
 
@@ -496,21 +496,21 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
             res = BinaryOperation.Lt
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield BinOpContext("binOp", children.reverse, res)
         } else if (lex.curTokenIn(Set(MlToken.ADD))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             a        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.ADD)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected ADD, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected ADD, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
 
@@ -518,21 +518,21 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
             res = BinaryOperation.Add
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield BinOpContext("binOp", children.reverse, res)
         } else if (lex.curTokenIn(Set(MlToken.SUB))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             s        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.SUB)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected SUB, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected SUB, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
 
@@ -540,21 +540,21 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
             res = BinaryOperation.Sub
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield BinOpContext("binOp", children.reverse, res)
         } else if (lex.curTokenIn(Set(MlToken.DIV))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             d        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.DIV)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected DIV, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected DIV, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
 
@@ -562,21 +562,21 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
             res = BinaryOperation.Div
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield BinOpContext("binOp", children.reverse, res)
         } else if (lex.curTokenIn(Set(MlToken.EQ_CMP))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             e        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.EQ_CMP)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected EQ_CMP, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected EQ_CMP, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
 
@@ -584,7 +584,7 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
             res = BinaryOperation.Eq
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield BinOpContext("binOp", children.reverse, res)
         } else {
           throwPEStateT[F, MlLexer, BinOpContext]("Unexpected token: " + lex.curToken())
@@ -598,17 +598,17 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
       res <-
         if (lex.curTokenIn(Set(MlToken.BOOL))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             b        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.BOOL)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected BOOL, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected BOOL, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
 
@@ -616,21 +616,21 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
             res = BooleanTerm(b.text == "True")
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield TermContext("term", children.reverse, res)
         } else if (lex.curTokenIn(Set(MlToken.NUMBER))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             n        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.NUMBER)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected NUMBER, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected NUMBER, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
 
@@ -638,21 +638,21 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
             res = IntTerm(n.text.toInt)
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield TermContext("term", children.reverse, res)
         } else if (lex.curTokenIn(Set(MlToken.VAR))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             v        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.VAR)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected VAR, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected VAR, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
 
@@ -660,35 +660,35 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
             res = VarTerm(v.text)
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield TermContext("term", children.reverse, res)
         } else if (lex.curTokenIn(Set(MlToken.LPAREN))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             l        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.LPAREN)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected LPAREN, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected LPAREN, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
             e        <- expr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => e :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => e :: list)
             r        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.RPAREN)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected RPAREN, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected RPAREN, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
 
@@ -696,7 +696,7 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
             res = e.res
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield TermContext("term", children.reverse, res)
         } else {
           throwPEStateT[F, MlLexer, TermContext]("Unexpected token: " + lex.curToken())
@@ -710,27 +710,27 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
       res <-
         if (lex.curTokenIn(Set(MlToken.FST))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             f        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.FST)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected FST, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected FST, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
             e        <- expr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => e :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => e :: list)
 
             // USER CODE
             res = UnaryOpTerm(UnaryOperation.Fst, e.res)
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield FstExprContext("fstExpr", children.reverse, res)
         } else {
           throwPEStateT[F, MlLexer, FstExprContext]("Unexpected token: " + lex.curToken())
@@ -744,87 +744,87 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
       res <-
         if (lex.curTokenIn(Set(MlToken.IF))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             i        <- ifExpr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => i :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => i :: list)
 
             // USER CODE
             res = i.res
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield ExprContext("expr", children.reverse, res)
         } else if (lex.curTokenIn(Set(MlToken.FUN))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             f        <- funcExpr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => f :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => f :: list)
 
             // USER CODE
             res = f.res
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield ExprContext("expr", children.reverse, res)
         } else if (lex.curTokenIn(Set(MlToken.LET))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             l        <- letQrecExpr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => l :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => l :: list)
 
             // USER CODE
             res = l.res
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield ExprContext("expr", children.reverse, res)
         } else if (lex.curTokenIn(Set(MlToken.BOOL, MlToken.NUMBER, MlToken.VAR, MlToken.LPAREN))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             o        <- otherExpr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => o :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => o :: list)
 
             // USER CODE
             res = o.res
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield ExprContext("expr", children.reverse, res)
         } else if (lex.curTokenIn(Set(MlToken.OPEN_PAIR))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             p        <- pairExpr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => p :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => p :: list)
 
             // USER CODE
             res = p.res
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield ExprContext("expr", children.reverse, res)
         } else if (lex.curTokenIn(Set(MlToken.SND))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             snd      <- sndExpr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => snd :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => snd :: list)
 
             // USER CODE
             res = snd.res
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield ExprContext("expr", children.reverse, res)
         } else if (lex.curTokenIn(Set(MlToken.FST))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             fst      <- fstExpr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => fst :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => fst :: list)
 
             // USER CODE
             res = fst.res
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield ExprContext("expr", children.reverse, res)
         } else {
           throwPEStateT[F, MlLexer, ExprContext]("Unexpected token: " + lex.curToken())
@@ -838,27 +838,27 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
       res <-
         if (lex.curTokenIn(Set(MlToken.SND))) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             s        <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.SND)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected SND, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected SND, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
             e        <- expr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => e :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => e :: list)
 
             // USER CODE
             res = UnaryOpTerm(UnaryOperation.Snd, e.res)
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield SndExprContext("sndExpr", children.reverse, res)
         } else {
           throwPEStateT[F, MlLexer, SndExprContext]("Unexpected token: " + lex.curToken())
@@ -894,15 +894,15 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
           )
         ) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             c        <- otherCont(fromTerm)
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => c :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => c :: list)
 
             // USER CODE
             res = c.res
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield OtherQcontContext("otherQcont", children.reverse, res)
         } else if (
           lex.curTokenIn(
@@ -910,13 +910,13 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
           )
         ) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
 
             // USER CODE
             res = fromTerm
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield OtherQcontContext("otherQcont", children.reverse, res)
         } else {
           throwPEStateT[F, MlLexer, OtherQcontContext]("Unexpected token: " + lex.curToken())
@@ -945,19 +945,19 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
           )
         ) {
           for {
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](List.empty)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](List.empty)
             e        <- expr()
-            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState).map(list => e :: list)
+            curState <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState).map(list => e :: list)
             e1       <- StateT.get[MlMET, MlLexer].map(lexer => lexer.curToken())
             lexer    <- StateT.get[MlMET, MlLexer]
             _ <-
               if (!lexer.compareToken(MlToken.EOF)) {
-                throwPEStateT[F, MlLexer, List[GrammarTree[_]]]("Expected EOF, found:" + lexer.curToken().text)
+                throwPEStateT[F, MlLexer, List[GrammarTree[?]]]("Expected EOF, found:" + lexer.curToken().text)
               } else {
-                StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+                StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               }
             curState <- StateT
-              .pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+              .pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
               .map(list => TerminalTree(lexer.curToken()) :: list)
             curState <- getLexerWithNextToken(curState)
 
@@ -965,7 +965,7 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
             res = e.res
             // END USER CODE
 
-            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[_]]](curState)
+            children <- StateT.pure[MlMET, MlLexer, List[GrammarTree[?]]](curState)
           } yield ParseContext("parse", children.reverse, res)
         } else {
           throwPEStateT[F, MlLexer, ParseContext]("Unexpected token: " + lex.curToken())
@@ -973,8 +973,8 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
     } yield res
   }
 
-  private def getLexerWithNextToken(curState: List[GrammarTree[_]]): MlParseState[List[GrammarTree[_]]] = {
-    StateT.apply[MlMET, MlLexer, List[GrammarTree[_]]] { lexer =>
+  private def getLexerWithNextToken(curState: List[GrammarTree[?]]): MlParseState[List[GrammarTree[?]]] = {
+    StateT.apply[MlMET, MlLexer, List[GrammarTree[?]]] { lexer =>
       lexer
         .nextToken()
         .fold(
@@ -987,109 +987,109 @@ case class MlParser[F[_]: Monad](inputStream: InputStream) {
 
 object MlParser {
 
-  case class OtherContContext(ctxRoot: String, ctxChildren: List[GrammarTree[_]] = List.empty, res: Expression = null)
+  case class OtherContContext(ctxRoot: String, ctxChildren: List[GrammarTree[?]] = List.empty, res: Expression = null)
       extends ContextTree(ctxRoot, ctxChildren) {
-    override def pushFirstChild(child: GrammarTree[_]): OtherContContext =
+    override def pushFirstChild(child: GrammarTree[?]): OtherContContext =
       OtherContContext(ctxRoot, child :: ctxChildren)
-    override def appendLastChild(child: GrammarTree[_]): OtherContContext =
+    override def appendLastChild(child: GrammarTree[?]): OtherContContext =
       OtherContContext(ctxRoot, ctxChildren ++ List(child))
   }
 
-  case class PairExprContext(ctxRoot: String, ctxChildren: List[GrammarTree[_]] = List.empty, res: Expression = null)
+  case class PairExprContext(ctxRoot: String, ctxChildren: List[GrammarTree[?]] = List.empty, res: Expression = null)
       extends ContextTree(ctxRoot, ctxChildren) {
-    override def pushFirstChild(child: GrammarTree[_]): PairExprContext = PairExprContext(ctxRoot, child :: ctxChildren)
-    override def appendLastChild(child: GrammarTree[_]): PairExprContext =
+    override def pushFirstChild(child: GrammarTree[?]): PairExprContext = PairExprContext(ctxRoot, child :: ctxChildren)
+    override def appendLastChild(child: GrammarTree[?]): PairExprContext =
       PairExprContext(ctxRoot, ctxChildren ++ List(child))
   }
 
-  case class LetQrecContext(ctxRoot: String, ctxChildren: List[GrammarTree[_]] = List.empty, res: String = null)
+  case class LetQrecContext(ctxRoot: String, ctxChildren: List[GrammarTree[?]] = List.empty, res: String = null)
       extends ContextTree(ctxRoot, ctxChildren) {
-    override def pushFirstChild(child: GrammarTree[_]): LetQrecContext = LetQrecContext(ctxRoot, child :: ctxChildren)
-    override def appendLastChild(child: GrammarTree[_]): LetQrecContext =
+    override def pushFirstChild(child: GrammarTree[?]): LetQrecContext = LetQrecContext(ctxRoot, child :: ctxChildren)
+    override def appendLastChild(child: GrammarTree[?]): LetQrecContext =
       LetQrecContext(ctxRoot, ctxChildren ++ List(child))
   }
 
-  case class IfExprContext(ctxRoot: String, ctxChildren: List[GrammarTree[_]] = List.empty, res: Expression = null)
+  case class IfExprContext(ctxRoot: String, ctxChildren: List[GrammarTree[?]] = List.empty, res: Expression = null)
       extends ContextTree(ctxRoot, ctxChildren) {
-    override def pushFirstChild(child: GrammarTree[_]): IfExprContext = IfExprContext(ctxRoot, child :: ctxChildren)
-    override def appendLastChild(child: GrammarTree[_]): IfExprContext =
+    override def pushFirstChild(child: GrammarTree[?]): IfExprContext = IfExprContext(ctxRoot, child :: ctxChildren)
+    override def appendLastChild(child: GrammarTree[?]): IfExprContext =
       IfExprContext(ctxRoot, ctxChildren ++ List(child))
   }
 
-  case class QRecContext(ctxRoot: String, ctxChildren: List[GrammarTree[_]] = List.empty, res: String = null)
+  case class QRecContext(ctxRoot: String, ctxChildren: List[GrammarTree[?]] = List.empty, res: String = null)
       extends ContextTree(ctxRoot, ctxChildren) {
-    override def pushFirstChild(child: GrammarTree[_]): QRecContext  = QRecContext(ctxRoot, child :: ctxChildren)
-    override def appendLastChild(child: GrammarTree[_]): QRecContext = QRecContext(ctxRoot, ctxChildren ++ List(child))
+    override def pushFirstChild(child: GrammarTree[?]): QRecContext  = QRecContext(ctxRoot, child :: ctxChildren)
+    override def appendLastChild(child: GrammarTree[?]): QRecContext = QRecContext(ctxRoot, ctxChildren ++ List(child))
   }
 
-  case class FuncExprContext(ctxRoot: String, ctxChildren: List[GrammarTree[_]] = List.empty, res: Expression = null)
+  case class FuncExprContext(ctxRoot: String, ctxChildren: List[GrammarTree[?]] = List.empty, res: Expression = null)
       extends ContextTree(ctxRoot, ctxChildren) {
-    override def pushFirstChild(child: GrammarTree[_]): FuncExprContext = FuncExprContext(ctxRoot, child :: ctxChildren)
-    override def appendLastChild(child: GrammarTree[_]): FuncExprContext =
+    override def pushFirstChild(child: GrammarTree[?]): FuncExprContext = FuncExprContext(ctxRoot, child :: ctxChildren)
+    override def appendLastChild(child: GrammarTree[?]): FuncExprContext =
       FuncExprContext(ctxRoot, ctxChildren ++ List(child))
   }
 
-  case class OtherExprContext(ctxRoot: String, ctxChildren: List[GrammarTree[_]] = List.empty, res: Expression = null)
+  case class OtherExprContext(ctxRoot: String, ctxChildren: List[GrammarTree[?]] = List.empty, res: Expression = null)
       extends ContextTree(ctxRoot, ctxChildren) {
-    override def pushFirstChild(child: GrammarTree[_]): OtherExprContext =
+    override def pushFirstChild(child: GrammarTree[?]): OtherExprContext =
       OtherExprContext(ctxRoot, child :: ctxChildren)
-    override def appendLastChild(child: GrammarTree[_]): OtherExprContext =
+    override def appendLastChild(child: GrammarTree[?]): OtherExprContext =
       OtherExprContext(ctxRoot, ctxChildren ++ List(child))
   }
 
-  case class LetQrecExprContext(ctxRoot: String, ctxChildren: List[GrammarTree[_]] = List.empty, res: Expression = null)
+  case class LetQrecExprContext(ctxRoot: String, ctxChildren: List[GrammarTree[?]] = List.empty, res: Expression = null)
       extends ContextTree(ctxRoot, ctxChildren) {
-    override def pushFirstChild(child: GrammarTree[_]): LetQrecExprContext =
+    override def pushFirstChild(child: GrammarTree[?]): LetQrecExprContext =
       LetQrecExprContext(ctxRoot, child :: ctxChildren)
-    override def appendLastChild(child: GrammarTree[_]): LetQrecExprContext =
+    override def appendLastChild(child: GrammarTree[?]): LetQrecExprContext =
       LetQrecExprContext(ctxRoot, ctxChildren ++ List(child))
   }
 
-  case class BinOpContext(ctxRoot: String, ctxChildren: List[GrammarTree[_]] = List.empty, res: BinaryOperation = null)
+  case class BinOpContext(ctxRoot: String, ctxChildren: List[GrammarTree[?]] = List.empty, res: BinaryOperation = null)
       extends ContextTree(ctxRoot, ctxChildren) {
-    override def pushFirstChild(child: GrammarTree[_]): BinOpContext = BinOpContext(ctxRoot, child :: ctxChildren)
-    override def appendLastChild(child: GrammarTree[_]): BinOpContext =
+    override def pushFirstChild(child: GrammarTree[?]): BinOpContext = BinOpContext(ctxRoot, child :: ctxChildren)
+    override def appendLastChild(child: GrammarTree[?]): BinOpContext =
       BinOpContext(ctxRoot, ctxChildren ++ List(child))
   }
 
-  case class TermContext(ctxRoot: String, ctxChildren: List[GrammarTree[_]] = List.empty, res: Expression = null)
+  case class TermContext(ctxRoot: String, ctxChildren: List[GrammarTree[?]] = List.empty, res: Expression = null)
       extends ContextTree(ctxRoot, ctxChildren) {
-    override def pushFirstChild(child: GrammarTree[_]): TermContext  = TermContext(ctxRoot, child :: ctxChildren)
-    override def appendLastChild(child: GrammarTree[_]): TermContext = TermContext(ctxRoot, ctxChildren ++ List(child))
+    override def pushFirstChild(child: GrammarTree[?]): TermContext  = TermContext(ctxRoot, child :: ctxChildren)
+    override def appendLastChild(child: GrammarTree[?]): TermContext = TermContext(ctxRoot, ctxChildren ++ List(child))
   }
 
-  case class FstExprContext(ctxRoot: String, ctxChildren: List[GrammarTree[_]] = List.empty, res: Expression = null)
+  case class FstExprContext(ctxRoot: String, ctxChildren: List[GrammarTree[?]] = List.empty, res: Expression = null)
       extends ContextTree(ctxRoot, ctxChildren) {
-    override def pushFirstChild(child: GrammarTree[_]): FstExprContext = FstExprContext(ctxRoot, child :: ctxChildren)
-    override def appendLastChild(child: GrammarTree[_]): FstExprContext =
+    override def pushFirstChild(child: GrammarTree[?]): FstExprContext = FstExprContext(ctxRoot, child :: ctxChildren)
+    override def appendLastChild(child: GrammarTree[?]): FstExprContext =
       FstExprContext(ctxRoot, ctxChildren ++ List(child))
   }
 
-  case class ExprContext(ctxRoot: String, ctxChildren: List[GrammarTree[_]] = List.empty, res: Expression = null)
+  case class ExprContext(ctxRoot: String, ctxChildren: List[GrammarTree[?]] = List.empty, res: Expression = null)
       extends ContextTree(ctxRoot, ctxChildren) {
-    override def pushFirstChild(child: GrammarTree[_]): ExprContext  = ExprContext(ctxRoot, child :: ctxChildren)
-    override def appendLastChild(child: GrammarTree[_]): ExprContext = ExprContext(ctxRoot, ctxChildren ++ List(child))
+    override def pushFirstChild(child: GrammarTree[?]): ExprContext  = ExprContext(ctxRoot, child :: ctxChildren)
+    override def appendLastChild(child: GrammarTree[?]): ExprContext = ExprContext(ctxRoot, ctxChildren ++ List(child))
   }
 
-  case class SndExprContext(ctxRoot: String, ctxChildren: List[GrammarTree[_]] = List.empty, res: Expression = null)
+  case class SndExprContext(ctxRoot: String, ctxChildren: List[GrammarTree[?]] = List.empty, res: Expression = null)
       extends ContextTree(ctxRoot, ctxChildren) {
-    override def pushFirstChild(child: GrammarTree[_]): SndExprContext = SndExprContext(ctxRoot, child :: ctxChildren)
-    override def appendLastChild(child: GrammarTree[_]): SndExprContext =
+    override def pushFirstChild(child: GrammarTree[?]): SndExprContext = SndExprContext(ctxRoot, child :: ctxChildren)
+    override def appendLastChild(child: GrammarTree[?]): SndExprContext =
       SndExprContext(ctxRoot, ctxChildren ++ List(child))
   }
 
-  case class OtherQcontContext(ctxRoot: String, ctxChildren: List[GrammarTree[_]] = List.empty, res: Expression = null)
+  case class OtherQcontContext(ctxRoot: String, ctxChildren: List[GrammarTree[?]] = List.empty, res: Expression = null)
       extends ContextTree(ctxRoot, ctxChildren) {
-    override def pushFirstChild(child: GrammarTree[_]): OtherQcontContext =
+    override def pushFirstChild(child: GrammarTree[?]): OtherQcontContext =
       OtherQcontContext(ctxRoot, child :: ctxChildren)
-    override def appendLastChild(child: GrammarTree[_]): OtherQcontContext =
+    override def appendLastChild(child: GrammarTree[?]): OtherQcontContext =
       OtherQcontContext(ctxRoot, ctxChildren ++ List(child))
   }
 
-  case class ParseContext(ctxRoot: String, ctxChildren: List[GrammarTree[_]] = List.empty, res: Expression = null)
+  case class ParseContext(ctxRoot: String, ctxChildren: List[GrammarTree[?]] = List.empty, res: Expression = null)
       extends ContextTree(ctxRoot, ctxChildren) {
-    override def pushFirstChild(child: GrammarTree[_]): ParseContext = ParseContext(ctxRoot, child :: ctxChildren)
-    override def appendLastChild(child: GrammarTree[_]): ParseContext =
+    override def pushFirstChild(child: GrammarTree[?]): ParseContext = ParseContext(ctxRoot, child :: ctxChildren)
+    override def appendLastChild(child: GrammarTree[?]): ParseContext =
       ParseContext(ctxRoot, ctxChildren ++ List(child))
   }
 }

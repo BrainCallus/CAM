@@ -17,11 +17,10 @@ object Value {
   case class StringValue(value: String) extends Value
 
   // todo _3 for debug only
-  case class PairValue(first: (Int, List[Value] => Value, Value), second: (Int, List[Value] => Value, Value))
-      extends Value {
+  case class PairValue(first: (Int, List[Value] => Value), second: (Int, List[Value] => Value)) extends Value {
     def showValues(env: List[Value]): String =
       if (env.isDefinedAt(first._1) && env.isDefinedAt(second._1)) {
-        s"(${env(first._1).show}, ${second._2(env).show})"
+        s"(${env(first._1).show}, ${env(second._1).show})"
       } else {
         s"Could not retrieve pair"
       }
@@ -57,7 +56,7 @@ object Value {
     case IntValue(value)    => value.toString
     case StringValue(value) => value
     case PairValue(first, second) =>
-      s"(${first._1}, _, ${second._1},_)"
+      s"(&${first._1}, &${second._1})"
     case ClosureValue(code) => s"Closure(${code.map(_.show).mkString("[", ",", "]")})"
   }
 }

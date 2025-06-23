@@ -54,7 +54,7 @@ object Expression {
       for {
         termInst <- term.toInstructions[F](envs)
         opInst   <- op.toInstructions[F](envs)
-      } yield termInst
+      } yield termInst ++ opInst
   }
 
   final case class BinaryOpTerm(op: BinaryOperation, left: Expression, right: Expression) extends Expression {

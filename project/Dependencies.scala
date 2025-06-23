@@ -31,4 +31,10 @@ object Dependencies {
     val core = "tf.tofu" %% "tofu-core-ce3" % V.tofu
     val full = "tf.tofu" %% "tofu"          % V.tofu
   }
+
+  object scopt {
+    val scopt = "com.github.scopt" %% "scopt" % "4.1.0"
+
+    def * : Seq[ModuleID] = Seq(scopt)
+  }
 }

@@ -9,6 +9,7 @@ import model.Value.PairValue
 
 trait ContextWriter[F[_]] {
   def consolePrint(ctx: CAMContext): F[Unit]
+  def writeTableHeader(): F[Unit]
   def writeAsTableEntry(ctx: CAMContext): F[Unit]
 }
 
@@ -51,6 +52,20 @@ object ContextWriter {
       } yield ()
     }
 
+    override def writeTableHeader(): F[Unit] = {
+      for {
+        heads <- FileWriter[F].write(
+          config.file,
+          List(
+            " Term ",
+            " Code ",
+            " Stack ",
+          ).mkString("|", "|", "|\n"),
+        )
+        _ <- FileWriter[F].writeToExisting(config.file, "|:-:|:-:|:-:|\n")
+      } yield ()
+    }
+
     override def writeAsTableEntry(ctx: CAMContext): F[Unit] = {
       for {
         s <- RowFormater[F].formatMd(
@@ -60,7 +75,7 @@ object ContextWriter {
             showIterableStrings.show(ctx.stack.map(showValue(_, ctx.env))),
           ),
         )
-        _ <- FileWriter[F].writeToExisting(config.file, s)
+        _ <- FileWriter[F].writeToExisting(config.file, s"$s\n")
       } yield ()
     }
 

@@ -99,12 +99,6 @@ object Instruction extends Enum[Instruction] {
     }
   }
 
-  private def mkPair(values: List[Value], v1: Value, v2: Value): (PairValue, List[Value]) = {
-    val i       = values.length
-    val newTerm = values ++ List(v1, v2)
-    (PairValue((i, arr => arr(i), v1), (i + 1, arr => arr(i + 1), v2)), newTerm)
-  }
-
   final case class BRANCH(thenCase: Value, elseCase: Value) extends Instruction {
     override def execute(env: List[Value]): (List[Instruction], List[Value]) => Either[Throwable, Value] = {
       case (i :: is, BoolValue(true) :: stack)  => i.execute(env)(is, thenCase :: stack)
@@ -173,14 +167,14 @@ object Instruction extends Enum[Instruction] {
     override def execute(env: List[Value]): (List[Instruction], List[Value]) => Either[Throwable, Value] = {
       case (i :: is, v :: PairValue(f, s) :: xs) =>
         val newTerm = env.updated(f._1, v) // todo: make safe
-        i.execute(newTerm)(is, PairValue(f.copy(_3 = v), s) :: xs)
+        i.execute(newTerm)(is, PairValue(f, s) :: xs)
       case _ => new RuntimeException("SETFST instruction requires a pair on the stack").asLeft
     }
 
     override def executeSingle: CAMContext => Either[Throwable, CAMContext] = {
       case CAMContext(term, code, PairValue(f, s) :: stack, env) =>
         val newValues = env.updated(f._1, term) // todo: make safe
-        CAMContext(PairValue(f.copy(_3 = term), s), code, stack, newValues).asRight
+        CAMContext(PairValue(f, s), code, stack, newValues).asRight
       case _ => new RuntimeException("SETFST instruction requires a pair as a term").asLeft
     }
   }
@@ -189,14 +183,14 @@ object Instruction extends Enum[Instruction] {
     override def execute(env: List[Value]): (List[Instruction], List[Value]) => Either[Throwable, Value] = {
       case (i :: is, v :: PairValue(f, s) :: xs) =>
         val newTerm = env.updated(s._1, v) // todo: make safe
-        i.execute(newTerm)(is, PairValue(f, s.copy(_3 = v)) :: xs)
+        i.execute(newTerm)(is, PairValue(f, s) :: xs)
       case _ => new RuntimeException("SETSND instruction requires a pair on the stack").asLeft
     }
 
     override def executeSingle: CAMContext => Either[Throwable, CAMContext] = {
       case CAMContext(term, code, PairValue(f, s) :: stack, env) =>
         val newValues = env.updated(s._1, term) // todo: make safe
-        CAMContext(PairValue(f, s.copy(_3 = term)), code, stack, newValues).asRight
+        CAMContext(PairValue(f, s), code, stack, newValues).asRight
       case _ => new RuntimeException("SETSND instruction requires a pair as a term").asLeft
     }
   }
@@ -334,5 +328,11 @@ object Instruction extends Enum[Instruction] {
     case BRANCH(thenCase, elseCase) => s"BRANCH(${thenCase.show}, ${elseCase.show})"
     case QUOTE(value)               => s"QUOTE(${value.show})"
     case i                          => i.toString
+  }
+
+  private def mkPair(values: List[Value], v1: Value, v2: Value): (PairValue, List[Value]) = {
+    val i      = values.length
+    val newEnv = values ++ List(v1, v2)
+    (PairValue((i, arr => arr(i)), (i + 1, arr => arr(i + 1))), newEnv)
   }
 }
