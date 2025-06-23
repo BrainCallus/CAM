@@ -19,14 +19,17 @@ object Entrypoint {
     (OParser.runParser(parser, args, SetupConfig()) match {
       case (Some(config), _) => runCam(config)
       case (None, effects) =>
-        val errOutput = effects
+        val usage = List(OParser.usage(parser))
+        effects
           .collectFirst {
             case OEffect.DisplayToOut(msg: String) => msg
             case OEffect.DisplayToErr(msg: String) => msg
             case OEffect.ReportError(msg: String)  => msg
           }
-          .getOrElse(OParser.usage(parser))
-        Console[IO].errorln(errOutput)
+          .map(_ :: usage)
+          .getOrElse(usage)
+          .map(Console[IO].errorln)
+          .sequence_
     }).unsafeRunSync()
   }
 
